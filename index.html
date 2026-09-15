@@ -1,24 +1,189 @@
-<!DOCTYPE html>
-<html>
+l<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gock Connector</title>
+  <title>Gock</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 18px;
+      text-align: center;
+      border-bottom: 1px solid #333;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    header p {
+      margin: 6px 0 0;
+      color: #888;
+      font-size: 14px;
+    }
+
+    #chat {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .message {
+      max-width: 85%;
+      padding: 12px 15px;
+      border-radius: 16px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+    }
+
+    .user {
+      align-self: flex-end;
+      background: #333;
+    }
+
+    .gock {
+      align-self: flex-start;
+      background: #222;
+      border: 1px solid #444;
+    }
+
+    #inputArea {
+      display: flex;
+      gap: 8px;
+      padding: 12px;
+      border-top: 1px solid #333;
+      background: #111;
+    }
+
+    #messageInput {
+      flex: 1;
+      padding: 13px;
+      border-radius: 12px;
+      border: 1px solid #444;
+      background: #222;
+      color: #fff;
+      font-size: 16px;
+      outline: none;
+    }
+
+    button {
+      padding: 0 18px;
+      border: 0;
+      border-radius: 12px;
+      background: #fff;
+      color: #111;
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+    }
+  </style>
 </head>
+
 <body>
-  <h1>Gock Connector</h1>
-  <p id="status">Testing...</p>
+
+  <header>
+    <h1>Gock 🤖</h1>
+    <p>1/Grok • Gock Connector</p>
+  </header>
+
+  <main id="chat">
+    <div class="message gock">
+      Gock is online. 😏
+      <br><br>
+      Go ahead. Say something.
+    </div>
+  </main>
+
+  <div id="inputArea">
+    <input
+      id="messageInput"
+      type="text"
+      placeholder="Talk to Gock..."
+      autocomplete="off"
+    >
+    <button id="sendButton">Send</button>
+  </div>
 
   <script>
-    fetch("/health")
-      .then(r => r.json())
-      .then(data => {
-        document.getElementById("status").textContent =
-          data.ok ? "✅ Gock is online!" : "❌ Gock is offline";
-      })
-      .catch(() => {
-        document.getElementById("status").textContent = "❌ Connection failed";
-      });
+    const chat = document.getElementById("chat");
+    const input = document.getElementById("messageInput");
+    const button = document.getElementById("sendButton");
+
+    function addMessage(text, type) {
+      const div = document.createElement("div");
+      div.className = `message ${type}`;
+      div.textContent = text;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const message = input.value.trim();
+
+      if (!message) return;
+
+      addMessage(message, "user");
+      input.value = "";
+      button.disabled = true;
+      button.textContent = "...";
+
+      try {
+        const response = await fetch("/api/message", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ message })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Gock could not reply.");
+        }
+
+        addMessage(data.message.content, "gock");
+
+      } catch (error) {
+        addMessage("Gock connection error: " + error.message, "gock");
+      }
+
+      button.disabled = false;
+      button.textContent = "Send";
+      input.focus();
+    }
+
+    button.addEventListener("click", sendMessage);
+
+    input.addEventListener("keydown", event => {
+      if (event.key === "Enter") {
+        sendMessage();
+      }
+    });
+
+    input.focus();
   </script>
+
 </body>
 </html>
