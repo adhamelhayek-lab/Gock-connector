@@ -27,7 +27,7 @@ let context = {
 let messages = [];
 
 app.get("/", (_req, res) => {
-  res.sendFile(__dirname + "/index.html");
+  res.sendFile(new URL("./index.html", import.meta.url).pathname);
    });
 
 app.get("/health", (_req, res) => {
