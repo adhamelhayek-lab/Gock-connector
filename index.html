@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gock Connector</title>
+</head>
+<body>
+  <h1>Gock Connector</h1>
+  <p id="status">Testing...</p>
+
+  <script>
+    fetch("/health")
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById("status").textContent =
+          data.ok ? "✅ Gock is online!" : "❌ Gock is offline";
+      })
+      .catch(() => {
+        document.getElementById("status").textContent = "❌ Connection failed";
+      });
+  </script>
+</body>
+</html>
