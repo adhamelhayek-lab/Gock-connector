@@ -27,11 +27,8 @@ let context = {
 let messages = [];
 
 app.get("/", (_req, res) => {
-  res.json({
-    service: "Gock Connector",
-    status: "online"
-  });
-});
+  res.sendFile(__dirname + "/index.html");
+   });
 
 app.get("/health", (_req, res) => {
   res.json({
