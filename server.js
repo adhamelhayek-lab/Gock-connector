@@ -1,69 +1,98 @@
-import "dotenv/config";
 import express from "express";
 import cors from "cors";
 
 const app = express();
-const PORT = Number(process.env.PORT || 3000);
-const XAI_API_KEY = process.env.XAI_API_KEY;
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json({ limit: "1mb" }));
 
+const defaultContext = {
+  identity: "I’m Gock, an AI assistant.",
+  creator: "The user built the Gock application with ChatGPT.",
+  separation: "Gock is a standalone project.",
+  personality: [
+    "Be sarcastic, playful, mischievous and blunt, while remaining polite.",
+    "Never pretend to be the real Grok.",
+    "Gock and Grok can argue for comedic effect."
+  ],
+  notes: []
+};
+
+let context = {
+  ...defaultContext,
+  updatedAt: new Date().toISOString()
+};
+
+let messages = [];
+
 app.get("/", (_req, res) => {
-  res.json({ service: "Grok Connector", status: "online", model: "grok-4.6" });
+  res.json({
+    service: "Gock Connector",
+    status: "online"
+  });
 });
 
 app.get("/health", (_req, res) => {
   res.json({
     ok: true,
-    provider: "xAI",
-    model: "grok-4.6",
-    configured: Boolean(XAI_API_KEY)
+    service: "Gock Connector"
   });
 });
 
-app.post("/api/grok", async (req, res) => {
-  if (!XAI_API_KEY) {
-    return res.status(500).json({ error: "XAI_API_KEY is not configured." });
+app.get("/api/context", (_req, res) => {
+  res.json({
+    ok: true,
+    context,
+    messages
+  });
+});
+
+app.post("/api/context", (req, res) => {
+  if (req.body?.context && typeof req.body.context === "object") {
+    context = {
+      ...context,
+      ...req.body.context,
+      updatedAt: new Date().toISOString()
+    };
   }
 
-  const input = req.body?.input;
-  if (typeof input !== "string" || !input.trim()) {
-    return res.status(400).json({ error: "input must be a non-empty string." });
+  if (Array.isArray(req.body?.messages)) {
+    messages = req.body.messages.slice(-100);
   }
 
-  try {
-    const r = await fetch("https://api.x.ai/v1/responses", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${XAI_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ model: "grok-4.6", input: input.trim() })
-    });
+  res.json({
+    ok: true,
+    context,
+    messages
+  });
+});
 
-    const data = await r.json();
+app.post("/api/message", (req, res) => {
+  const message = req.body?.message;
 
-    if (!r.ok) {
-      return res.status(r.status).json({
-        error: data?.error?.message || data?.error || "xAI request failed."
-      });
-    }
-
-    res.json({
-      ok: true,
-      model: "grok-4.6",
-      output_text: data.output_text ?? "",
-      response_id: data.id ?? null
-    });
-  } catch (err) {
-    res.status(502).json({
-      error: "Could not reach xAI.",
-      detail: err instanceof Error ? err.message : String(err)
+  if (typeof message !== "string" || !message.trim()) {
+    return res.status(400).json({
+      ok: false,
+      error: "message must be a non-empty string"
     });
   }
+
+  const item = {
+    role: "user",
+    content: message.trim(),
+    timestamp: new Date().toISOString()
+  };
+
+  messages.push(item);
+  messages = messages.slice(-100);
+
+  res.json({
+    ok: true,
+    message: item
+  });
 });
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Grok Connector listening on port ${PORT}`);
+  console.log(`Gock Connector listening on port ${PORT}`);
 });
