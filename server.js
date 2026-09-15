@@ -3,7 +3,8 @@ import cors from "cors";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const XAI_API_KEY = process.env.XAI_API_KEY;
+
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
 app.use(cors());
 app.use(express.json({ limit: "1mb" }));
@@ -35,7 +36,7 @@ app.get("/health", (_req, res) => {
   res.json({
     ok: true,
     service: "Gock Connector",
-    aiConfigured: Boolean(XAI_API_KEY)
+    aiConfigured: Boolean(OPENROUTER_API_KEY)
   });
 });
 
@@ -77,10 +78,10 @@ app.post("/api/message", async (req, res) => {
     });
   }
 
-  if (!XAI_API_KEY) {
+  if (!OPENROUTER_API_KEY) {
     return res.status(500).json({
       ok: false,
-      error: "XAI_API_KEY is not configured."
+      error: "OPENROUTER_API_KEY is not configured."
     });
   }
 
@@ -104,7 +105,7 @@ ${context.notes.join("\n")}
 
 Important:
 - You are Gock, not the real Grok.
-- Your underlying AI model is 1/Grok.
+- Your underlying AI model may be provided by OpenRouter.
 - Never claim to literally be the real Grok.
 - Keep Gock's identity and personality.
 - Be sarcastic, playful, mischievous and blunt while remaining polite.
@@ -116,7 +117,9 @@ Important:
       content: systemPrompt.trim()
     },
     ...messages
-      .filter(item => item.role === "user" || item.role === "assistant")
+      .filter(
+        item => item.role === "user" || item.role === "assistant"
+      )
       .map(item => ({
         role: item.role,
         content: item.content
@@ -128,28 +131,35 @@ Important:
   ];
 
   try {
-    const response = await fetch(" https://openrouter.ai/api/v1/chat/completions, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "openrouter/free",
-        messages: conversation
-      })
-    });
+    const response = await fetch(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: "openrouter/free",
+          messages: conversation
+        })
+      }
+    );
 
     const data = await response.json();
 
     if (!response.ok) {
       return res.status(response.status).json({
         ok: false,
-        error: data?.error?.message || "1/Grok request failed."
+        error:
+          data?.error?.message ||
+          "OpenRouter request failed."
       });
     }
 
-    const reply = data.output_text || "";
+    const reply =
+      data?.choices?.[0]?.message?.content ||
+      "Gock received no response.";
 
     const userItem = {
       role: "user",
@@ -170,11 +180,15 @@ Important:
       ok: true,
       message: assistantItem
     });
+
   } catch (error) {
     res.status(502).json({
       ok: false,
-      error: "Could not reach 1/Grok.",
-      detail: error instanceof Error ? error.message : String(error)
+      error: "Could not reach OpenRouter.",
+      detail:
+        error instanceof Error
+          ? error.message
+          : String(error)
     });
   }
 });
