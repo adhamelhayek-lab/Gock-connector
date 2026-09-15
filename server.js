@@ -136,7 +136,7 @@ Important:
       },
       body: JSON.stringify({
         model: "openrouter/free",
-        input: conversation
+        messages: conversation
       })
     });
 
