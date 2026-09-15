@@ -128,14 +128,14 @@ Important:
   ];
 
   try {
-    const response = await fetch("https://api.x.ai/v1/responses", {
+    const response = await fetch(" https://openrouter.ai/api/v1/chat/completions, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${XAI_API_KEY}`,
+        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "grok-4.6",
+        model: "openrouter/free",
         input: conversation
       })
     });
