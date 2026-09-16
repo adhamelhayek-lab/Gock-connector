@@ -2,20 +2,38 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0, viewport-fit=cover"
   />
 
-  <meta name="theme-color" content="#0b0b0c" />
+  <meta
+    name="description"
+    content="Gock — personal AI assistant"
+  />
+
+  <meta name="theme-color" content="#0b0b0f" />
 
   <title>Gock</title>
 
   <style>
+    :root {
+      --bg: #0b0b0f;
+      --panel: #111116;
+      --panel-2: #17171d;
+      --border: #27272f;
+      --text: #f4f4f5;
+      --muted: #9a9aa3;
+      --accent: #ffffff;
+      --user: #25252d;
+      --assistant: #15151b;
+      --danger: #ff6b6b;
+      --success: #72e6a0;
+      --max-width: 850px;
+    }
+
     * {
       box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
     }
 
     html,
@@ -24,10 +42,10 @@
       padding: 0;
       width: 100%;
       height: 100%;
-      overflow: hidden;
-      background: #0b0b0c;
-      color: #f5f5f5;
+      background: var(--bg);
+      color: var(--text);
       font-family:
+        Inter,
         -apple-system,
         BlinkMacSystemFont,
         "Segoe UI",
@@ -38,143 +56,237 @@
     }
 
     body {
-      min-height: 100dvh;
+      overflow: hidden;
     }
 
     button,
-    input,
     textarea {
       font: inherit;
     }
-
-    button {
-      border: 0;
-      cursor: pointer;
-    }
-
-    /* ------------------------------------------
-       APP
-    ------------------------------------------ */
 
     .app {
       width: 100%;
       height: 100dvh;
       display: flex;
       flex-direction: column;
-      background: #0b0b0c;
+      background: var(--bg);
     }
 
-    /* ------------------------------------------
-       HEADER
-    ------------------------------------------ */
+    /* ---------------- HEADER ---------------- */
 
-    .header {
+    header {
       flex: 0 0 auto;
+      height: 68px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(11, 11, 15, 0.94);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+
       display: flex;
       align-items: center;
-      gap: 14px;
-      min-height: 88px;
-      padding:
-        calc(14px + env(safe-area-inset-top))
-        18px
-        14px
-        18px;
+      justify-content: space-between;
 
-      background: #0d0d0e;
-      border-bottom: 1px solid #29292b;
+      padding:
+        max(10px, env(safe-area-inset-top))
+        16px
+        10px
+        16px;
+
+      position: relative;
+      z-index: 5;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      min-width: 0;
     }
 
     .avatar {
-      width: 54px;
-      height: 54px;
-      flex: 0 0 54px;
+      width: 40px;
+      height: 40px;
+      flex: 0 0 40px;
+
+      border-radius: 50%;
 
       display: flex;
       align-items: center;
       justify-content: center;
 
-      border-radius: 50%;
-      background: #f2f2f2;
-      color: #111;
-      font-size: 25px;
-      font-weight: 700;
+      background: #f4f4f5;
+      color: #0b0b0f;
+
+      font-size: 19px;
+      font-weight: 800;
+
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.1);
     }
 
-    .header-info {
+    .brand-info {
       min-width: 0;
-      flex: 1;
     }
 
     .title {
-      margin: 0;
-      font-size: 22px;
-      line-height: 1.15;
+      font-size: 17px;
+      line-height: 20px;
       font-weight: 700;
-      letter-spacing: -0.3px;
+      letter-spacing: -0.2px;
     }
 
     .status {
+      margin-top: 2px;
+
       display: flex;
       align-items: center;
-      gap: 9px;
-      margin-top: 6px;
+      gap: 6px;
 
-      color: #8f8f93;
-      font-size: 15px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 16px;
     }
 
     .status-dot {
-      width: 11px;
-      height: 11px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
-      background: #31d47c;
-      box-shadow: 0 0 10px rgba(49, 212, 124, 0.65);
-    }
-
-    .status-dot.offline {
       background: #777;
-      box-shadow: none;
+      flex: 0 0 7px;
     }
 
-    /* ------------------------------------------
-       CHAT
-    ------------------------------------------ */
+    .status.online .status-dot {
+      background: var(--success);
+    }
 
-    .chat {
+    .status.offline .status-dot {
+      background: var(--danger);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+
+      border: 1px solid transparent;
+      border-radius: 12px;
+
+      background: transparent;
+      color: var(--muted);
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      cursor: pointer;
+      transition: 0.18s ease;
+    }
+
+    .icon-btn:hover {
+      background: var(--panel-2);
+      border-color: var(--border);
+      color: var(--text);
+    }
+
+    .icon-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* ---------------- CHAT ---------------- */
+
+    .chat-wrap {
       flex: 1 1 auto;
       min-height: 0;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+    }
+
+    .chat {
+      width: 100%;
+      max-width: var(--max-width);
+      height: 100%;
 
       overflow-y: auto;
       overflow-x: hidden;
 
       padding:
         24px
-        18px
-        18px;
+        16px
+        130px
+        16px;
 
       scroll-behavior: smooth;
       overscroll-behavior: contain;
-      -webkit-overflow-scrolling: touch;
     }
 
-    .chat-inner {
-      width: 100%;
-      max-width: 900px;
-      margin: 0 auto;
+    .chat::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .chat::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .chat::-webkit-scrollbar-thumb {
+      background: #292930;
+      border-radius: 999px;
+    }
+
+    .welcome {
+      padding: 34px 8px 20px;
+      text-align: center;
+    }
+
+    .welcome-avatar {
+      width: 64px;
+      height: 64px;
+
+      margin: 0 auto 18px;
+
+      border-radius: 20px;
+
+      background: #f4f4f5;
+      color: #0b0b0f;
 
       display: flex;
-      flex-direction: column;
-      gap: 14px;
+      align-items: center;
+      justify-content: center;
+
+      font-size: 28px;
+      font-weight: 800;
+
+      box-shadow:
+        0 12px 40px rgba(0,0,0,0.35),
+        0 0 0 1px rgba(255,255,255,0.08);
     }
 
-    /* ------------------------------------------
-       MESSAGES
-    ------------------------------------------ */
+    .welcome h1 {
+      margin: 0 0 9px;
+
+      font-size: 27px;
+      line-height: 34px;
+      letter-spacing: -0.7px;
+    }
+
+    .welcome p {
+      max-width: 500px;
+      margin: 0 auto;
+
+      color: var(--muted);
+
+      font-size: 14px;
+      line-height: 22px;
+    }
 
     .message-row {
       width: 100%;
       display: flex;
-      animation: messageIn 0.16s ease-out;
+      margin: 0 0 17px;
     }
 
     .message-row.user {
@@ -186,79 +298,136 @@
     }
 
     .message {
-      max-width: min(82%, 720px);
+      max-width: min(82%, 680px);
 
-      padding: 14px 17px;
+      border-radius: 18px;
 
-      border-radius: 22px;
+      padding: 12px 15px;
 
-      font-size: 17px;
-      line-height: 1.55;
+      font-size: 15px;
+      line-height: 1.6;
 
-      white-space: pre-wrap;
       overflow-wrap: anywhere;
       word-break: break-word;
     }
 
     .message.user {
-      background: #343436;
-      color: #f7f7f7;
-
-      border-bottom-right-radius: 7px;
+      background: var(--user);
+      color: var(--text);
+      border-bottom-right-radius: 5px;
     }
 
     .message.assistant {
-      background: #202021;
-      color: #f0f0f0;
-
-      border: 1px solid #333335;
-      border-bottom-left-radius: 7px;
+      background: var(--assistant);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 5px;
     }
 
-    .message.error {
-      color: #ffb2b8;
-      border-color: #714247;
-      background: #241d1e;
+    .message p {
+      margin: 0 0 10px;
+    }
+
+    .message p:last-child {
+      margin-bottom: 0;
+    }
+
+    .message strong {
+      font-weight: 700;
+    }
+
+    .message code {
+      background: #09090c;
+      border: 1px solid #28282f;
+      border-radius: 6px;
+      padding: 2px 5px;
+
+      font-family:
+        "SFMono-Regular",
+        Consolas,
+        "Liberation Mono",
+        monospace;
+
+      font-size: 0.88em;
+    }
+
+    .message pre {
+      margin: 12px 0 0;
+      padding: 13px;
+
+      overflow-x: auto;
+
+      border-radius: 10px;
+      background: #09090c;
+      border: 1px solid var(--border);
+
+      font-family:
+        "SFMono-Regular",
+        Consolas,
+        "Liberation Mono",
+        monospace;
+
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .message pre code {
+      border: 0;
+      padding: 0;
+      background: transparent;
+    }
+
+    .message ul,
+    .message ol {
+      margin-top: 8px;
+      margin-bottom: 8px;
+      padding-left: 23px;
+    }
+
+    .message li {
+      margin: 4px 0;
+    }
+
+    .message blockquote {
+      margin: 10px 0;
+      padding-left: 12px;
+      border-left: 3px solid #55555e;
+      color: #c9c9d0;
     }
 
     .message a {
-      color: #b8d7ff;
+      color: #ffffff;
+      text-decoration: underline;
     }
 
-    /* ------------------------------------------
-       TYPING INDICATOR
-    ------------------------------------------ */
-
-    .typing-row {
-      display: none;
-      justify-content: flex-start;
-      width: 100%;
-    }
-
-    .typing-row.visible {
-      display: flex;
-    }
+    /* ---------------- TYPING ---------------- */
 
     .typing {
-      display: flex;
+      display: none;
       align-items: center;
-      gap: 7px;
+      gap: 5px;
 
-      padding: 14px 18px;
+      margin: 0 0 18px;
+      padding: 11px 14px;
 
-      background: #202021;
-      border: 1px solid #333335;
-      border-radius: 22px;
-      border-bottom-left-radius: 7px;
+      width: fit-content;
+
+      background: var(--assistant);
+      border: 1px solid var(--border);
+      border-radius: 17px;
+    }
+
+    .typing.visible {
+      display: flex;
     }
 
     .typing span {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #aaa;
+      width: 6px;
+      height: 6px;
 
-      animation: typing 1.1s infinite ease-in-out;
+      border-radius: 50%;
+      background: #a5a5ad;
+
+      animation: typing 1.25s infinite ease-in-out;
     }
 
     .typing span:nth-child(2) {
@@ -269,157 +438,9 @@
       animation-delay: 0.3s;
     }
 
-    /* ------------------------------------------
-       EMPTY STATE
-    ------------------------------------------ */
-
-    .empty {
-      flex: 1;
-      min-height: 55vh;
-
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      text-align: center;
-      color: #777;
-      font-size: 16px;
-    }
-
-    /* ------------------------------------------
-       COMPOSER
-    ------------------------------------------ */
-
-    .composer-area {
-      flex: 0 0 auto;
-
-      padding:
-        10px
-        16px
-        calc(12px + env(safe-area-inset-bottom))
-        16px;
-
-      background: #0b0b0c;
-    }
-
-    .composer {
-      width: 100%;
-      max-width: 900px;
-      margin: 0 auto;
-
-      display: flex;
-      align-items: flex-end;
-      gap: 8px;
-
-      padding: 6px;
-
-      background: #171718;
-      border: 1px solid #363638;
-      border-radius: 27px;
-
-      transition:
-        border-color 0.15s ease,
-        box-shadow 0.15s ease;
-    }
-
-    .composer:focus-within {
-      border-color: #505052;
-      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.025);
-    }
-
-    #messageInput {
-      flex: 1;
-      min-width: 0;
-
-      resize: none;
-
-      height: 52px;
-      max-height: 150px;
-
-      padding: 14px 14px;
-
-      border: 0;
-      outline: 0;
-
-      background: transparent;
-      color: #f5f5f5;
-
-      font-size: 17px;
-      line-height: 1.4;
-    }
-
-    #messageInput::placeholder {
-      color: #77777b;
-    }
-
-    #sendButton {
-      flex: 0 0 auto;
-
-      min-width: 120px;
-      height: 52px;
-
-      padding: 0 20px;
-
-      border-radius: 22px;
-
-      background: #f5f5f5;
-      color: #111;
-
-      font-size: 17px;
-      font-weight: 700;
-
-      transition:
-        transform 0.1s ease,
-        opacity 0.15s ease;
-    }
-
-    #sendButton:active {
-      transform: scale(0.97);
-    }
-
-    #sendButton:disabled {
-      cursor: default;
-      opacity: 0.55;
-    }
-
-    /* ------------------------------------------
-       SCROLLBAR
-    ------------------------------------------ */
-
-    .chat::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    .chat::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    .chat::-webkit-scrollbar-thumb {
-      background: #343436;
-      border-radius: 10px;
-    }
-
-    /* ------------------------------------------
-       ANIMATIONS
-    ------------------------------------------ */
-
-    @keyframes messageIn {
-      from {
-        opacity: 0;
-        transform: translateY(5px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
     @keyframes typing {
-      0%,
-      60%,
-      100% {
-        opacity: 0.35;
+      0%, 60%, 100% {
+        opacity: 0.3;
         transform: translateY(0);
       }
 
@@ -429,717 +450,1303 @@
       }
     }
 
-    /* ------------------------------------------
-       MOBILE
-    ------------------------------------------ */
+    /* ---------------- COMPOSER ---------------- */
+
+    .composer-area {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+
+      z-index: 10;
+
+      background:
+        linear-gradient(
+          to bottom,
+          rgba(11,11,15,0),
+          rgba(11,11,15,0.95) 25%,
+          #0b0b0f 55%
+        );
+
+      padding:
+        28px
+        12px
+        max(12px, env(safe-area-inset-bottom));
+    }
+
+    .composer {
+      width: 100%;
+      max-width: var(--max-width);
+      margin: 0 auto;
+
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+
+      padding: 8px;
+
+      background: rgba(20,20,26,0.96);
+      border: 1px solid var(--border);
+      border-radius: 17px;
+
+      box-shadow:
+        0 10px 40px rgba(0,0,0,0.35);
+    }
+
+    textarea {
+      flex: 1;
+      min-width: 0;
+
+      max-height: 150px;
+      min-height: 42px;
+
+      resize: none;
+
+      border: 0;
+      outline: 0;
+
+      background: transparent;
+      color: var(--text);
+
+      padding: 10px 9px;
+
+      font-size: 15px;
+      line-height: 22px;
+    }
+
+    textarea::placeholder {
+      color: #707078;
+    }
+
+    .send-btn {
+      width: 42px;
+      height: 42px;
+      flex: 0 0 42px;
+
+      border: 0;
+      border-radius: 12px;
+
+      background: #f4f4f5;
+      color: #0b0b0f;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      cursor: pointer;
+
+      font-size: 19px;
+      font-weight: 800;
+
+      transition: 0.18s ease;
+    }
+
+    .send-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .send-btn:active {
+      transform: scale(0.94);
+    }
+
+    .send-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .footer-note {
+      text-align: center;
+
+      margin-top: 7px;
+
+      color: #55555e;
+
+      font-size: 10px;
+      line-height: 14px;
+    }
+
+    /* ---------------- ERROR ---------------- */
+
+    .error {
+      color: #ff9b9b;
+    }
+
+    /* ---------------- MOBILE ---------------- */
 
     @media (max-width: 600px) {
-      .header {
-        min-height: 86px;
-        padding-left: 18px;
-        padding-right: 18px;
+      header {
+        height: 62px;
+        padding-left: 12px;
+        padding-right: 12px;
       }
 
       .avatar {
-        width: 52px;
-        height: 52px;
-        flex-basis: 52px;
+        width: 37px;
+        height: 37px;
+        flex-basis: 37px;
+        font-size: 17px;
+      }
+
+      .title {
+        font-size: 16px;
+      }
+
+      .status {
+        font-size: 11px;
       }
 
       .chat {
         padding:
-          22px
-          12px
-          14px;
+          18px
+          11px
+          125px
+          11px;
+      }
+
+      .welcome {
+        padding-top: 27px;
+      }
+
+      .welcome h1 {
+        font-size: 25px;
       }
 
       .message {
         max-width: 88%;
-        font-size: 17px;
+        font-size: 14.5px;
       }
 
       .composer-area {
-        padding-left: 10px;
-        padding-right: 10px;
+        padding-left: 8px;
+        padding-right: 8px;
       }
 
-      #sendButton {
-        min-width: 108px;
-        padding-left: 16px;
-        padding-right: 16px;
-      }
-    }
-
-    @media (max-width: 390px) {
-      .message {
-        max-width: 92%;
-      }
-
-      #sendButton {
-        min-width: 92px;
+      .footer-note {
+        font-size: 9px;
       }
     }
   </style>
 </head>
 
 <body>
-
   <div class="app">
 
-    <!-- ========================================
-         HEADER
-    ========================================= -->
+    <!-- HEADER -->
+    <header>
+      <div class="brand">
+        <div class="avatar">G</div>
 
-    <header class="header">
+        <div class="brand-info">
+          <div class="title">Gock</div>
 
-      <div class="avatar" aria-hidden="true">
-        G
-      </div>
-
-      <div class="header-info">
-        <h1 class="title">
-          Gock
-        </h1>
-
-        <div class="status">
-          <span
-            id="statusDot"
-            class="status-dot"
-          ></span>
-
-          <span id="statusText">
-            Gemini-powered
-          </span>
+          <div id="status" class="status">
+            <span class="status-dot"></span>
+            <span id="statusText">Checking connection...</span>
+          </div>
         </div>
       </div>
 
+      <div class="header-actions">
+        <button
+          id="resetBtn"
+          class="icon-btn"
+          type="button"
+          aria-label="Reset conversation"
+          title="Reset conversation"
+        >
+          ↻
+        </button>
+      </div>
     </header>
 
+    <!-- CHAT -->
+    <main class="chat-wrap">
+      <section id="chat" class="chat">
 
-    <!-- ========================================
-         CHAT AREA
-    ========================================= -->
+        <div id="welcome" class="welcome">
+          <div class="welcome-avatar">G</div>
 
-    <main
-      id="chat"
-      class="chat"
-      aria-live="polite"
-    >
+          <h1>Hello, I'm Gock.</h1>
 
-      <div
-        id="chatInner"
-        class="chat-inner"
-      >
-
-        <div
-          id="emptyState"
-          class="empty"
-        >
-          <div>
-            <div style="font-size: 18px; margin-bottom: 6px;">
-              Gock
-            </div>
-
-            <div>
-              Go ahead. Say something.
-            </div>
-          </div>
+          <p>
+            Your personal AI assistant for building, coding,
+            reasoning, research, and working through ideas.
+          </p>
         </div>
 
-        <!-- Typing indicator -->
+        <div id="messages"></div>
 
-        <div
-          id="typingRow"
-          class="typing-row"
-        >
-
-          <div class="typing">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-
+        <div id="typing" class="typing" aria-label="Gock is thinking">
+          <span></span>
+          <span></span>
+          <span></span>
         </div>
 
-      </div>
-
+      </section>
     </main>
 
-
-    <!-- ========================================
-         COMPOSER
-    ========================================= -->
-
-    <section class="composer-area">
-
-      <form
-        id="composer"
-        class="composer"
-        autocomplete="off"
-      >
+    <!-- COMPOSER -->
+    <div class="composer-area">
+      <div class="composer">
 
         <textarea
-          id="messageInput"
+          id="input"
           rows="1"
-          maxlength="10000"
-          placeholder="Talk to Gock..."
-          aria-label="Message Gock"
-          enterkeyhint="send"
+          maxlength="12000"
+          placeholder="Message Gock..."
+          autocomplete="off"
+          autocorrect="on"
+          spellcheck="true"
         ></textarea>
 
         <button
-          id="sendButton"
-          type="submit"
+          id="sendBtn"
+          class="send-btn"
+          type="button"
+          aria-label="Send message"
         >
-          Send
+          ↑
         </button>
 
-      </form>
+      </div>
 
-    </section>
+      <div class="footer-note">
+        Gock can make mistakes. Verify important information.
+      </div>
+    </div>
 
   </div>
 
-
   <script>
-    "use strict";
+    /*
+      ============================================================
+      GOCK FRONTEND
+      ============================================================
 
-    // ==================================================
-    // Gock frontend configuration
-    // ==================================================
+      Backend endpoints:
 
-    const API_URL = "/api/message";
+        GET  /health
+        POST /api/message
+        POST /api/message/stream
+        POST /api/conversation/reset
 
-    const MAX_HISTORY = 12;
+      The frontend keeps a local copy of the visible conversation
+      for UI continuity.
 
-    const STORAGE_KEY = "gock_chat_history_v1";
+      The server remains responsible for the real persistent
+      conversation state and PostgreSQL memory.
+    */
 
-
-    // ==================================================
-    // DOM
-    // ==================================================
+    const STORAGE_KEY = "gock_conversation_v2";
+    const MAX_HISTORY = 40;
 
     const chat = document.getElementById("chat");
+    const messagesEl = document.getElementById("messages");
+    const input = document.getElementById("input");
+    const sendBtn = document.getElementById("sendBtn");
+    const typing = document.getElementById("typing");
+    const welcome = document.getElementById("welcome");
 
-    const chatInner =
-      document.getElementById("chatInner");
+    const status = document.getElementById("status");
+    const statusText = document.getElementById("statusText");
+    const resetBtn = document.getElementById("resetBtn");
 
-    const emptyState =
-      document.getElementById("emptyState");
-
-    const typingRow =
-      document.getElementById("typingRow");
-
-    const composer =
-      document.getElementById("composer");
-
-    const messageInput =
-      document.getElementById("messageInput");
-
-    const sendButton =
-      document.getElementById("sendButton");
-
-    const statusDot =
-      document.getElementById("statusDot");
-
-    const statusText =
-      document.getElementById("statusText");
-
-
-    // ==================================================
-    // State
-    // ==================================================
-
-    let messages = [];
-
+    let history = [];
     let sending = false;
 
-
-    // ==================================================
-    // Default context
-    // ==================================================
-
-    const gockContext = {
-      identity: "I'm Gock, an AI assistant.",
-
-      personality:
-        "Friendly, direct, intelligent, conversational, and helpful.",
-
-      purpose:
-        "Help the user with questions, coding, writing, reasoning, learning, and everyday tasks."
-    };
-
-
-    // ==================================================
-    // Local storage
-    // ==================================================
+    /* ============================================================
+       STORAGE
+       ============================================================ */
 
     function loadHistory() {
       try {
-        const saved =
-          localStorage.getItem(STORAGE_KEY);
+        const raw = localStorage.getItem(STORAGE_KEY);
 
-        if (!saved) {
-          return [];
+        if (!raw) {
+          history = [];
+          return;
         }
 
-        const parsed =
-          JSON.parse(saved);
+        const parsed = JSON.parse(raw);
 
         if (!Array.isArray(parsed)) {
-          return [];
+          history = [];
+          return;
         }
 
-        return parsed
-          .filter(item => {
-            return (
-              item &&
-              typeof item === "object" &&
-              (item.role === "user" ||
-               item.role === "assistant") &&
-              typeof item.content === "string"
-            );
-          })
+        history = parsed
+          .filter(item =>
+            item &&
+            (item.role === "user" || item.role === "assistant") &&
+            typeof item.content === "string"
+          )
           .slice(-MAX_HISTORY);
 
-      } catch (error) {
-        console.warn(
-          "Could not load Gock history:",
-          error
-        );
-
-        return [];
+      } catch {
+        history = [];
       }
     }
-
 
     function saveHistory() {
       try {
+        history = history.slice(-MAX_HISTORY);
         localStorage.setItem(
           STORAGE_KEY,
-          JSON.stringify(
-            messages.slice(-MAX_HISTORY)
-          )
+          JSON.stringify(history)
         );
-      } catch (error) {
-        console.warn(
-          "Could not save Gock history:",
-          error
-        );
+      } catch {
+        // LocalStorage may be unavailable in some private modes.
       }
     }
 
+    /* ============================================================
+       MARKDOWN
+       ============================================================ */
 
-    // ==================================================
-    // Rendering
-    // ==================================================
-
-    function hideEmptyState() {
-      if (emptyState) {
-        emptyState.style.display = "none";
-      }
+    function escapeHtml(value) {
+      return value
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
     }
 
+    function renderMarkdown(text) {
+      if (!text) return "";
 
-    function addMessage(role, text, isError = false) {
-      hideEmptyState();
+      let value = escapeHtml(String(text));
 
-      const row =
-        document.createElement("div");
+      /*
+        Protect fenced code blocks.
+      */
+
+      const codeBlocks = [];
+
+      value = value.replace(
+        /```([\s\S]*?)```/g,
+        (_, code) => {
+          const index = codeBlocks.length;
+
+          let clean = code;
+
+          if (clean.startsWith("\n")) {
+            clean = clean.slice(1);
+          }
+
+          codeBlocks.push(
+            `<pre><code>${clean}</code></pre>`
+          );
+
+          return `@@CODEBLOCK_${index}@@`;
+        }
+      );
+
+      /*
+        Inline code.
+      */
+
+      value = value.replace(
+        /`([^`\n]+)`/g,
+        "<code>$1</code>"
+      );
+
+      /*
+        Bold.
+      */
+
+      value = value.replace(
+        /\*\*([^*]+)\*\*/g,
+        "<strong>$1</strong>"
+      );
+
+      /*
+        Italic.
+      */
+
+      value = value.replace(
+        /(^|[^\*])\*([^*\n]+)\*/g,
+        "$1<em>$2</em>"
+      );
+
+      /*
+        Links.
+      */
+
+      value = value.replace(
+        /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+        '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
+      );
+
+      /*
+        Escape bare URLs into links.
+      */
+
+      value = value.replace(
+        /(^|[\s>])(https?:\/\/[^\s<]+)/g,
+        '$1<a href="$2" target="_blank" rel="noopener noreferrer">$2</a>'
+      );
+
+      /*
+        Headings.
+      */
+
+      value = value.replace(
+        /^### (.+)$/gm,
+        "<strong>$1</strong>"
+      );
+
+      value = value.replace(
+        /^## (.+)$/gm,
+        "<strong>$1</strong>"
+      );
+
+      value = value.replace(
+        /^# (.+)$/gm,
+        "<strong>$1</strong>"
+      );
+
+      /*
+        Unordered lists.
+      */
+
+      value = value.replace(
+        /^(?:[-*] .+(?:\n|$))+?/gm,
+        block => {
+          const items = block
+            .trim()
+            .split("\n")
+            .map(line =>
+              line.replace(/^[-*]\s+/, "")
+            )
+            .map(item => `<li>${item}</li>`)
+            .join("");
+
+          return `<ul>${items}</ul>`;
+        }
+      );
+
+      /*
+        Ordered lists.
+      */
+
+      value = value.replace(
+        /^(?:\d+\.\s.+(?:\n|$))+?/gm,
+        block => {
+          const items = block
+            .trim()
+            .split("\n")
+            .map(line =>
+              line.replace(/^\d+\.\s+/, "")
+            )
+            .map(item => `<li>${item}</li>`)
+            .join("");
+
+          return `<ol>${items}</ol>`;
+        }
+      );
+
+      /*
+        Blockquotes.
+      */
+
+      value = value.replace(
+        /^>\s?(.*)$/gm,
+        "<blockquote>$1</blockquote>"
+      );
+
+      /*
+        Paragraphs / line breaks.
+
+        Don't add <br> inside generated HTML blocks.
+      */
+
+      const blocks = value
+        .split(/\n{2,}/)
+        .map(block => {
+          const trimmed = block.trim();
+
+          if (!trimmed) {
+            return "";
+          }
+
+          if (
+            trimmed.startsWith("<pre>") ||
+            trimmed.startsWith("<ul>") ||
+            trimmed.startsWith("<ol>") ||
+            trimmed.startsWith("<blockquote>")
+          ) {
+            return trimmed;
+          }
+
+          return `<p>${trimmed.replace(/\n/g, "<br>")}</p>`;
+        })
+        .filter(Boolean);
+
+      value = blocks.join("");
+
+      /*
+        Restore code blocks.
+      */
+
+      codeBlocks.forEach((block, index) => {
+        value = value.replace(
+          `@@CODEBLOCK_${index}@@`,
+          block
+        );
+      });
+
+      return value;
+    }
+
+    /* ============================================================
+       UI
+       ============================================================ */
+
+    function scrollToBottom(smooth = true) {
+      requestAnimationFrame(() => {
+        chat.scrollTo({
+          top: chat.scrollHeight,
+          behavior: smooth ? "smooth" : "auto"
+        });
+      });
+    }
+
+    function updateWelcome() {
+      welcome.style.display =
+        history.length === 0 ? "block" : "none";
+    }
+
+    function createMessageElement(role, content = "") {
+      const row = document.createElement("div");
 
       row.className =
         `message-row ${role}`;
 
-
-      const bubble =
-        document.createElement("div");
+      const bubble = document.createElement("div");
 
       bubble.className =
         `message ${role}`;
 
-      if (isError) {
-        bubble.classList.add("error");
+      if (role === "assistant") {
+        bubble.innerHTML = renderMarkdown(content);
+      } else {
+        bubble.textContent = content;
       }
 
-      bubble.textContent = text;
-
-
       row.appendChild(bubble);
-
-      chatInner.insertBefore(
-        row,
-        typingRow
-      );
-
-      scrollToBottom();
+      messagesEl.appendChild(row);
 
       return bubble;
     }
 
-
     function renderHistory() {
-      const rows =
-        chatInner.querySelectorAll(
-          ".message-row"
+      messagesEl.innerHTML = "";
+
+      for (const item of history) {
+        createMessageElement(
+          item.role,
+          item.content
         );
-
-      rows.forEach(row => row.remove());
-
-      if (messages.length === 0) {
-        if (emptyState) {
-          emptyState.style.display = "flex";
-        }
-
-        return;
       }
 
-      hideEmptyState();
-
-      messages.forEach(message => {
-        addMessage(
-          message.role,
-          message.content
-        );
-      });
-
-      scrollToBottom();
+      updateWelcome();
+      scrollToBottom(false);
     }
-
-
-    // ==================================================
-    // Typing indicator
-    // ==================================================
 
     function setTyping(visible) {
+      typing.classList.toggle(
+        "visible",
+        visible
+      );
+
       if (visible) {
-        typingRow.classList.add("visible");
-      } else {
-        typingRow.classList.remove("visible");
+        scrollToBottom();
       }
-
-      scrollToBottom();
     }
 
+    function setSending(value) {
+      sending = value;
 
-    // ==================================================
-    // Status
-    // ==================================================
+      sendBtn.disabled =
+        value || !input.value.trim();
 
-    function setOnline() {
-      statusDot.classList.remove("offline");
-      statusText.textContent =
-        "Gemini-powered";
+      input.disabled = value;
     }
-
-
-    function setOffline() {
-      statusDot.classList.add("offline");
-      statusText.textContent =
-        "Connection problem";
-    }
-
-
-    // ==================================================
-    // Scroll
-    // ==================================================
-
-    function scrollToBottom() {
-      requestAnimationFrame(() => {
-        chat.scrollTop =
-          chat.scrollHeight;
-      });
-    }
-
-
-    // ==================================================
-    // Input auto resize
-    // ==================================================
-
-    function resizeInput() {
-      messageInput.style.height = "auto";
-
-      const height =
-        Math.min(
-          messageInput.scrollHeight,
-          150
-        );
-
-      messageInput.style.height =
-        `${height}px`;
-    }
-
-
-    // ==================================================
-    // Send button state
-    // ==================================================
 
     function updateSendButton() {
-      const hasText =
-        messageInput.value.trim().length > 0;
+      sendBtn.disabled =
+        sending || !input.value.trim();
+    }
 
-      sendButton.disabled =
-        sending || !hasText;
+    /* ============================================================
+       STATUS
+       ============================================================ */
 
-      if (sending) {
-        sendButton.textContent =
-          "Sending...";
-      } else {
-        sendButton.textContent =
-          "Send";
+    async function checkHealth() {
+      try {
+        const response = await fetch(
+          "/health",
+          {
+            method: "GET",
+            cache: "no-store"
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Health check failed");
+        }
+
+        const data = await response.json();
+
+        status.classList.remove("offline");
+        status.classList.add("online");
+
+        if (
+          data.database === "connected" &&
+          data.core === "connected"
+        ) {
+          statusText.textContent =
+            "AI assistant · Online";
+        } else {
+          statusText.textContent =
+            "AI assistant · Online";
+        }
+
+      } catch {
+        status.classList.remove("online");
+        status.classList.add("offline");
+
+        statusText.textContent =
+          "AI assistant · Offline";
       }
     }
 
+    /* ============================================================
+       REQUEST HELPERS
+       ============================================================ */
 
-    // ==================================================
-    // Send message to Gock
-    // ==================================================
+    function buildPayload(message) {
+      return {
+        message,
+
+        /*
+          Send the visible history as a fallback.
+
+          The upgraded server can normally use its
+          PostgreSQL-backed Interactions state, but this gives
+          it a recovery path if the server-side interaction
+          expires or is unavailable.
+        */
+
+        messages: history.map(item => ({
+          role: item.role,
+          content: item.content
+        }))
+      };
+    }
+
+    function extractTextFromObject(obj) {
+      if (obj == null) {
+        return "";
+      }
+
+      if (typeof obj === "string") {
+        return obj;
+      }
+
+      /*
+        Common response shapes.
+      */
+
+      const directKeys = [
+        "text",
+        "content",
+        "output_text",
+        "delta",
+        "message"
+      ];
+
+      for (const key of directKeys) {
+        if (
+          typeof obj[key] === "string" &&
+          obj[key].length
+        ) {
+          return obj[key];
+        }
+      }
+
+      /*
+        Nested output.
+      */
+
+      if (Array.isArray(obj.output)) {
+        let result = "";
+
+        for (const item of obj.output) {
+          result += extractTextFromObject(item);
+        }
+
+        if (result) {
+          return result;
+        }
+      }
+
+      /*
+        Nested content.
+      */
+
+      if (Array.isArray(obj.content)) {
+        let result = "";
+
+        for (const item of obj.content) {
+          result += extractTextFromObject(item);
+        }
+
+        if (result) {
+          return result;
+        }
+      }
+
+      /*
+        Nested response.
+      */
+
+      if (obj.response) {
+        const result =
+          extractTextFromObject(obj.response);
+
+        if (result) {
+          return result;
+        }
+      }
+
+      return "";
+    }
+
+    /* ============================================================
+       STREAMING
+       ============================================================ */
+
+    async function sendStreaming(message, bubble) {
+      const response = await fetch(
+        "/api/message/stream",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json"
+          },
+
+          credentials: "include",
+
+          body: JSON.stringify(
+            buildPayload(message)
+          )
+        }
+      );
+
+      if (!response.ok) {
+        let detail = "";
+
+        try {
+          const data = await response.json();
+
+          detail =
+            data.error ||
+            data.message ||
+            "";
+        } catch {
+          // Ignore JSON parse errors.
+        }
+
+        throw new Error(
+          detail ||
+          `Request failed (${response.status})`
+        );
+      }
+
+      if (!response.body) {
+        throw new Error(
+          "Streaming is not available."
+        );
+      }
+
+      const reader =
+        response.body.getReader();
+
+      const decoder =
+        new TextDecoder("utf-8");
+
+      let buffer = "";
+      let fullText = "";
+
+      while (true) {
+        const { value, done } =
+          await reader.read();
+
+        if (done) {
+          break;
+        }
+
+        buffer += decoder.decode(
+          value,
+          { stream: true }
+        );
+
+        /*
+          SSE messages are separated by blank lines.
+        */
+
+        const events =
+          buffer.split(/\r?\n\r?\n/);
+
+        buffer =
+          events.pop() || "";
+
+        for (const event of events) {
+          const lines =
+            event.split(/\r?\n/);
+
+          for (const line of lines) {
+            if (!line.startsWith("data:")) {
+              continue;
+            }
+
+            const raw =
+              line.slice(5).trim();
+
+            if (!raw || raw === "[DONE]") {
+              continue;
+            }
+
+            let piece = "";
+
+            try {
+              const parsed =
+                JSON.parse(raw);
+
+              piece =
+                extractTextFromObject(parsed);
+            } catch {
+              /*
+                Some servers may send plain text
+                data events.
+              */
+
+              piece = raw;
+            }
+
+            if (!piece) {
+              continue;
+            }
+
+            fullText += piece;
+
+            bubble.innerHTML =
+              renderMarkdown(fullText);
+
+            scrollToBottom();
+          }
+        }
+      }
+
+      /*
+        Flush remaining decoder data.
+      */
+
+      buffer += decoder.decode();
+
+      if (buffer.trim()) {
+        const lines =
+          buffer.split(/\r?\n/);
+
+        for (const line of lines) {
+          if (!line.startsWith("data:")) {
+            continue;
+          }
+
+          const raw =
+            line.slice(5).trim();
+
+          if (!raw || raw === "[DONE]") {
+            continue;
+          }
+
+          let piece = "";
+
+          try {
+            const parsed =
+              JSON.parse(raw);
+
+            piece =
+              extractTextFromObject(parsed);
+          } catch {
+            piece = raw;
+          }
+
+          if (piece) {
+            fullText += piece;
+            bubble.innerHTML =
+              renderMarkdown(fullText);
+          }
+        }
+      }
+
+      if (!fullText.trim()) {
+        throw new Error(
+          "The server returned an empty response."
+        );
+      }
+
+      return fullText;
+    }
+
+    /* ============================================================
+       NORMAL REQUEST FALLBACK
+       ============================================================ */
+
+    async function sendNormal(message) {
+      const response = await fetch(
+        "/api/message",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json"
+          },
+
+          credentials: "include",
+
+          body: JSON.stringify(
+            buildPayload(message)
+          )
+        }
+      );
+
+      let data = null;
+
+      try {
+        data = await response.json();
+      } catch {
+        throw new Error(
+          `Server returned ${response.status}`
+        );
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+          data.message ||
+          `Request failed (${response.status})`
+        );
+      }
+
+      const reply =
+        data.reply ||
+        data.text ||
+        data.response ||
+        extractTextFromObject(data);
+
+      if (!reply) {
+        throw new Error(
+          "The server returned an empty response."
+        );
+      }
+
+      return reply;
+    }
+
+    /* ============================================================
+       SEND MESSAGE
+       ============================================================ */
 
     async function sendMessage() {
       if (sending) {
         return;
       }
 
-      const text =
-        messageInput.value.trim();
+      const message =
+        input.value.trim();
 
-      if (!text) {
+      if (!message) {
         return;
       }
 
-      sending = true;
+      /*
+        Add user message locally first.
+      */
 
-      updateSendButton();
-
-      messageInput.value = "";
-
-      resizeInput();
-
-      // Add user message immediately.
-      const userMessage = {
+      history.push({
         role: "user",
-        content: text
-      };
+        content: message
+      });
 
-      messages.push(userMessage);
-
-      messages =
-        messages.slice(-MAX_HISTORY);
+      history =
+        history.slice(-MAX_HISTORY);
 
       saveHistory();
+      updateWelcome();
 
-      addMessage(
+      createMessageElement(
         "user",
-        text
+        message
       );
 
+      input.value = "";
+      autoResize();
+
+      setSending(true);
       setTyping(true);
 
+      /*
+        Create the assistant bubble before streaming.
+      */
+
+      const assistantBubble =
+        createMessageElement(
+          "assistant",
+          ""
+        );
+
+      assistantBubble.classList.add(
+        "streaming"
+      );
+
+      scrollToBottom();
+
+      let reply = "";
 
       try {
         /*
-         * Send only the recent conversation.
-         * Keeping this small makes requests faster.
-         */
-
-        const historyForServer =
-          messages.slice(-MAX_HISTORY);
-
-
-        const response =
-          await fetch(API_URL, {
-            method: "POST",
-
-            headers: {
-              "Content-Type":
-                "application/json"
-            },
-
-            body: JSON.stringify({
-              message: text,
-
-              messages:
-                historyForServer,
-
-              context:
-                gockContext
-            })
-          });
-
-
-        let data = null;
+          First use the upgraded streaming endpoint.
+        */
 
         try {
-          data =
-            await response.json();
-        } catch {
-          throw new Error(
-            "The server returned an invalid response."
-          );
+          reply =
+            await sendStreaming(
+              message,
+              assistantBubble
+            );
+        } catch (streamError) {
+          /*
+            If streaming isn't supported or fails before
+            producing a response, use the normal endpoint.
+          */
+
+          assistantBubble.innerHTML = "";
+
+          reply =
+            await sendNormal(message);
+
+          assistantBubble.innerHTML =
+            renderMarkdown(reply);
         }
 
+        /*
+          Save the final assistant response.
+        */
 
-        if (!response.ok) {
-          throw new Error(
-            data?.error ||
-            `Server error (${response.status}).`
-          );
-        }
-
-
-        const reply =
-          typeof data?.reply === "string"
-            ? data.reply.trim()
-            : "";
-
-
-        if (!reply) {
-          throw new Error(
-            "Gock returned an empty response."
-          );
-        }
-
-
-        // Add assistant response.
-        const assistantMessage = {
+        history.push({
           role: "assistant",
           content: reply
-        };
+        });
 
-        messages.push(
-          assistantMessage
-        );
-
-        messages =
-          messages.slice(-MAX_HISTORY);
+        history =
+          history.slice(-MAX_HISTORY);
 
         saveHistory();
 
-        setTyping(false);
-
-        addMessage(
-          "assistant",
-          reply
-        );
-
-        setOnline();
-
       } catch (error) {
-        console.error(
-          "Gock request failed:",
-          error
-        );
-
-        setTyping(false);
-
-        setOffline();
-
-        addMessage(
-          "assistant",
-          error?.message ||
-            "Gock could not connect to Gemini.",
-          true
-        );
+        assistantBubble.innerHTML = `
+          <div class="error">
+            ${renderMarkdown(
+              getFriendlyError(error)
+            )}
+          </div>
+        `;
 
       } finally {
-        sending = false;
+        assistantBubble.classList.remove(
+          "streaming"
+        );
+
+        setTyping(false);
+        setSending(false);
 
         updateSendButton();
 
-        messageInput.focus();
+        scrollToBottom();
       }
     }
 
+    /* ============================================================
+       ERROR HANDLING
+       ============================================================ */
 
-    // ==================================================
-    // Form submit
-    // ==================================================
+    function getFriendlyError(error) {
+      const message =
+        error?.message ||
+        "Something went wrong.";
 
-    composer.addEventListener(
-      "submit",
-      event => {
-        event.preventDefault();
+      const lower =
+        message.toLowerCase();
 
-        sendMessage();
+      if (
+        lower.includes("quota") ||
+        lower.includes("rate limit") ||
+        lower.includes("429") ||
+        lower.includes("resource exhausted")
+      ) {
+        return (
+          "Gemini's current free-tier request limit has been reached. " +
+          "Gock's server and memory system are still running; " +
+          "please try again after the quota resets."
+        );
       }
-    );
 
+      if (
+        lower.includes("failed to fetch") ||
+        lower.includes("network")
+      ) {
+        return (
+          "I couldn't reach the Gock server. " +
+          "Please check your connection and try again."
+        );
+      }
 
-    // ==================================================
-    // Keyboard behavior
-    // ==================================================
+      return message;
+    }
 
-    messageInput.addEventListener(
+    /* ============================================================
+       RESET CONVERSATION
+       ============================================================ */
+
+    async function resetConversation() {
+      if (sending) {
+        return;
+      }
+
+      const confirmed =
+        window.confirm(
+          "Reset this Gock conversation?"
+        );
+
+      if (!confirmed) {
+        return;
+      }
+
+      try {
+        await fetch(
+          "/api/conversation/reset",
+          {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json"
+            }
+          }
+        );
+      } catch {
+        /*
+          Even if the server is unavailable,
+          clear the local conversation.
+        */
+      }
+
+      history = [];
+
+      try {
+        localStorage.removeItem(
+          STORAGE_KEY
+        );
+      } catch {
+        // Ignore storage errors.
+      }
+
+      renderHistory();
+
+      input.focus();
+    }
+
+    /* ============================================================
+       TEXTAREA
+       ============================================================ */
+
+    function autoResize() {
+      input.style.height = "auto";
+
+      input.style.height =
+        Math.min(
+          input.scrollHeight,
+          150
+        ) + "px";
+    }
+
+    input.addEventListener(
       "input",
       () => {
-        resizeInput();
+        autoResize();
         updateSendButton();
       }
     );
 
-
-    messageInput.addEventListener(
+    input.addEventListener(
       "keydown",
       event => {
-
-        /*
-         * Enter sends.
-         *
-         * Shift + Enter creates a new line.
-         */
-
         if (
           event.key === "Enter" &&
           !event.shiftKey
         ) {
           event.preventDefault();
 
-          sendMessage();
+          if (!sending) {
+            sendMessage();
+          }
         }
       }
     );
 
-
-    // ==================================================
-    // Prevent accidental page movement
-    // ==================================================
-
-    document.addEventListener(
-      "touchmove",
-      event => {
-        if (
-          event.target === messageInput
-        ) {
-          return;
-        }
-      },
-      { passive: true }
+    sendBtn.addEventListener(
+      "click",
+      sendMessage
     );
 
+    resetBtn.addEventListener(
+      "click",
+      resetConversation
+    );
 
-    // ==================================================
-    // Initial startup
-    // ==================================================
+    /* ============================================================
+       STARTUP
+       ============================================================ */
 
-    function initialize() {
-      messages =
-        loadHistory();
+    loadHistory();
+    renderHistory();
+    autoResize();
+    updateSendButton();
 
-      renderHistory();
+    checkHealth();
 
-      resizeInput();
+    /*
+      Recheck server status periodically.
+    */
 
-      updateSendButton();
+    setInterval(
+      checkHealth,
+      60000
+    );
 
-      setOnline();
+    /*
+      Focus the composer on desktop.
+    */
 
-      messageInput.focus();
-
-      scrollToBottom();
+    if (
+      window.innerWidth > 700
+    ) {
+      input.focus();
     }
-
-
-    initialize();
   </script>
-
 </body>
 </html>
