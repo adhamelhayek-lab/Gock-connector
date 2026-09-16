@@ -1,189 +1,987 @@
-l<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
+
+  <meta name="theme-color" content="#0b0b0b" />
+
   <title>Gock</title>
 
   <style>
     * {
       box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: #0b0b0b;
+      color: #f5f5f5;
+      font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+      overflow: hidden;
     }
 
     body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #111;
-      color: #fff;
-      height: 100vh;
       display: flex;
       flex-direction: column;
     }
 
-    header {
-      padding: 18px;
-      text-align: center;
-      border-bottom: 1px solid #333;
-    }
+    /* ------------------------------
+       HEADER
+    ------------------------------ */
 
-    header h1 {
-      margin: 0;
-      font-size: 28px;
-    }
-
-    header p {
-      margin: 6px 0 0;
-      color: #888;
-      font-size: 14px;
-    }
-
-    #chat {
-      flex: 1;
-      overflow-y: auto;
-      padding: 20px;
+    .header {
+      height: 72px;
+      min-height: 72px;
       display: flex;
-      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      border-bottom: 1px solid #292929;
+      background: #0d0d0d;
+      position: relative;
+      z-index: 10;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
       gap: 12px;
+      min-width: 0;
+    }
+
+    .logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: #f4f4f4;
+      color: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 18px;
+    }
+
+    .brand-text {
+      min-width: 0;
+    }
+
+    .brand-name {
+      font-size: 21px;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+
+    .brand-status {
+      margin-top: 3px;
+      font-size: 12px;
+      color: #8f8f8f;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #35d07f;
+      margin-right: 5px;
+      box-shadow: 0 0 7px rgba(53, 208, 127, 0.6);
+    }
+
+    /* ------------------------------
+       CHAT
+    ------------------------------ */
+
+    .chat {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 24px 16px 150px;
+      scroll-behavior: smooth;
+      overscroll-behavior: contain;
+    }
+
+    .chat::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .chat::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .chat::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 10px;
+    }
+
+    .welcome {
+      max-width: 720px;
+      margin: 35px auto 30px;
+      text-align: center;
+      padding: 30px 20px;
+    }
+
+    .welcome-logo {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      margin: 0 auto 18px;
+      background: #f2f2f2;
+      color: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: 800;
+    }
+
+    .welcome h1 {
+      margin: 0;
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+    .welcome p {
+      margin: 10px auto 0;
+      max-width: 470px;
+      color: #8f8f8f;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .message-row {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto 18px;
+      display: flex;
+    }
+
+    .message-row.user {
+      justify-content: flex-end;
+    }
+
+    .message-row.assistant {
+      justify-content: flex-start;
     }
 
     .message {
-      max-width: 85%;
-      padding: 12px 15px;
-      border-radius: 16px;
-      line-height: 1.4;
+      max-width: min(760px, 88%);
+      padding: 15px 18px;
+      border-radius: 20px;
+      line-height: 1.55;
+      font-size: 16px;
       white-space: pre-wrap;
+      overflow-wrap: anywhere;
     }
 
-    .user {
-      align-self: flex-end;
-      background: #333;
+    .message.user {
+      background: #333333;
+      border-bottom-right-radius: 6px;
     }
 
-    .gock {
-      align-self: flex-start;
-      background: #222;
-      border: 1px solid #444;
+    .message.assistant {
+      background: #202020;
+      border: 1px solid #383838;
+      border-bottom-left-radius: 6px;
     }
 
-    #inputArea {
+    .message.error {
+      border-color: #703737;
+      color: #ffb2b2;
+    }
+
+    /* ------------------------------
+       TYPING
+    ------------------------------ */
+
+    .typing {
+      display: none;
+      max-width: 900px;
+      margin: 0 auto 18px;
+    }
+
+    .typing.show {
+      display: block;
+    }
+
+    .typing-bubble {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 14px 17px;
+      border-radius: 18px;
+      background: #202020;
+      border: 1px solid #333;
+    }
+
+    .typing-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #aaa;
+      animation: typing 1.2s infinite ease-in-out;
+    }
+
+    .typing-dot:nth-child(2) {
+      animation-delay: 0.15s;
+    }
+
+    .typing-dot:nth-child(3) {
+      animation-delay: 0.3s;
+    }
+
+    @keyframes typing {
+      0%,
+      60%,
+      100% {
+        transform: translateY(0);
+        opacity: 0.4;
+      }
+
+      30% {
+        transform: translateY(-4px);
+        opacity: 1;
+      }
+    }
+
+    /* ------------------------------
+       INPUT AREA
+    ------------------------------ */
+
+    .input-area {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 20;
+      padding:
+        12px
+        14px
+        max(14px, env(safe-area-inset-bottom));
+      background:
+        linear-gradient(
+          to bottom,
+          rgba(11, 11, 11, 0),
+          rgba(11, 11, 11, 0.96) 28%
+        );
+    }
+
+    .input-wrapper {
+      max-width: 900px;
+      margin: 0 auto;
       display: flex;
-      gap: 8px;
-      padding: 12px;
-      border-top: 1px solid #333;
-      background: #111;
+      align-items: flex-end;
+      gap: 10px;
+      padding: 8px;
+      background: #171717;
+      border: 1px solid #3a3a3a;
+      border-radius: 22px;
+      box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.25);
     }
 
     #messageInput {
       flex: 1;
-      padding: 13px;
-      border-radius: 12px;
-      border: 1px solid #444;
-      background: #222;
-      color: #fff;
-      font-size: 16px;
-      outline: none;
-    }
-
-    button {
-      padding: 0 18px;
+      min-width: 0;
+      min-height: 48px;
+      max-height: 150px;
+      resize: none;
       border: 0;
-      border-radius: 12px;
-      background: #fff;
-      color: #111;
-      font-weight: bold;
+      outline: 0;
+      background: transparent;
+      color: #fff;
+      padding: 13px 13px;
+      font: inherit;
       font-size: 16px;
+      line-height: 1.4;
     }
 
-    button:disabled {
-      opacity: 0.5;
+    #messageInput::placeholder {
+      color: #777;
+    }
+
+    #sendButton {
+      height: 48px;
+      min-width: 92px;
+      border: 0;
+      border-radius: 17px;
+      background: #f4f4f4;
+      color: #111;
+      font-size: 16px;
+      font-weight: 750;
+      cursor: pointer;
+      transition:
+        transform 0.15s ease,
+        opacity 0.15s ease;
+    }
+
+    #sendButton:active {
+      transform: scale(0.97);
+    }
+
+    #sendButton:disabled {
+      opacity: 0.45;
+      cursor: default;
+    }
+
+    /* ------------------------------
+       CONNECTION NOTICE
+    ------------------------------ */
+
+    .connection {
+      position: fixed;
+      top: 82px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 30;
+      display: none;
+      width: calc(100% - 30px);
+      max-width: 520px;
+      padding: 12px 15px;
+      border-radius: 13px;
+      background: #241818;
+      border: 1px solid #593737;
+      color: #ffbcbc;
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .connection.show {
+      display: block;
+    }
+
+    /* ------------------------------
+       MOBILE
+    ------------------------------ */
+
+    @media (max-width: 600px) {
+      .header {
+        height: 64px;
+        min-height: 64px;
+        padding: 0 14px;
+      }
+
+      .logo {
+        width: 38px;
+        height: 38px;
+        font-size: 16px;
+      }
+
+      .brand-name {
+        font-size: 19px;
+      }
+
+      .chat {
+        padding:
+          18px
+          12px
+          145px;
+      }
+
+      .welcome {
+        margin-top: 25px;
+      }
+
+      .welcome h1 {
+        font-size: 30px;
+      }
+
+      .message {
+        max-width: 91%;
+        font-size: 15.5px;
+        padding: 14px 16px;
+      }
+
+      .input-area {
+        padding-left: 9px;
+        padding-right: 9px;
+      }
+
+      .input-wrapper {
+        border-radius: 19px;
+        padding: 7px;
+      }
+
+      #messageInput {
+        min-height: 46px;
+        font-size: 16px;
+      }
+
+      #sendButton {
+        min-width: 76px;
+        height: 46px;
+        border-radius: 15px;
+      }
     }
   </style>
 </head>
 
 <body>
 
-  <header>
-    <h1>Gock 🤖</h1>
-    <p>1/Grok • Gock Connector</p>
+  <!-- HEADER -->
+
+  <header class="header">
+    <div class="brand">
+      <div class="logo">G</div>
+
+      <div class="brand-text">
+        <div class="brand-name">Gock</div>
+
+        <div class="brand-status">
+          <span class="status-dot"></span>
+          Gemini-powered
+        </div>
+      </div>
+    </div>
   </header>
 
-  <main id="chat">
-    <div class="message gock">
-      Gock is online. 😏
-      <br><br>
-      Go ahead. Say something.
+
+  <!-- CONNECTION MESSAGE -->
+
+  <div id="connectionNotice" class="connection"></div>
+
+
+  <!-- CHAT -->
+
+  <main id="chat" class="chat">
+
+    <section id="welcome" class="welcome">
+      <div class="welcome-logo">G</div>
+
+      <h1>Gock</h1>
+
+      <p>
+        Your sarcastic, playful AI assistant.
+        Powered by Gemini, but definitely not Grok.
+      </p>
+    </section>
+
+
+    <!-- TYPING INDICATOR -->
+
+    <div id="typing" class="typing">
+      <div class="typing-bubble">
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+      </div>
     </div>
+
   </main>
 
-  <div id="inputArea">
-    <input
-      id="messageInput"
-      type="text"
-      placeholder="Talk to Gock..."
-      autocomplete="off"
-    >
-    <button id="sendButton">Send</button>
+
+  <!-- INPUT -->
+
+  <div class="input-area">
+    <div class="input-wrapper">
+
+      <textarea
+        id="messageInput"
+        rows="1"
+        maxlength="10000"
+        placeholder="Talk to Gock..."
+        autocomplete="off"
+        autocorrect="on"
+        spellcheck="true"
+      ></textarea>
+
+      <button
+        id="sendButton"
+        type="button"
+      >
+        Send
+      </button>
+
+    </div>
   </div>
 
+
   <script>
+    /*
+     * ============================================================
+     * GOCK FRONTEND
+     * ============================================================
+     *
+     * Backend:
+     *   POST /api/message
+     *   GET  /health
+     *
+     * IMPORTANT:
+     * This frontend intentionally waits up to 60 seconds.
+     *
+     * Render's free instances can take time to wake up, and Gemini
+     * can occasionally take several seconds to respond.
+     * ============================================================
+     */
+
+
+    const API_BASE = "";
+
+    /*
+     * 60 seconds.
+     *
+     * This is the important speed/reliability change.
+     * We don't want the browser killing a valid Gemini request
+     * too early.
+     */
+    const REQUEST_TIMEOUT = 60000;
+
+
     const chat = document.getElementById("chat");
     const input = document.getElementById("messageInput");
-    const button = document.getElementById("sendButton");
+    const sendButton = document.getElementById("sendButton");
+    const typing = document.getElementById("typing");
+    const welcome = document.getElementById("welcome");
+    const connectionNotice =
+      document.getElementById("connectionNotice");
 
-    function addMessage(text, type) {
-      const div = document.createElement("div");
-      div.className = `message ${type}`;
-      div.textContent = text;
-      chat.appendChild(div);
-      chat.scrollTop = chat.scrollHeight;
+
+    let isSending = false;
+
+
+    /*
+     * ============================================================
+     * HELPERS
+     * ============================================================
+     */
+
+    function scrollToBottom() {
+      requestAnimationFrame(() => {
+        chat.scrollTop = chat.scrollHeight;
+      });
     }
+
+
+    function showTyping() {
+      typing.classList.add("show");
+      scrollToBottom();
+    }
+
+
+    function hideTyping() {
+      typing.classList.remove("show");
+    }
+
+
+    function showConnectionNotice(message) {
+      connectionNotice.textContent = message;
+      connectionNotice.classList.add("show");
+    }
+
+
+    function hideConnectionNotice() {
+      connectionNotice.classList.remove("show");
+    }
+
+
+    function addMessage(role, content, isError = false) {
+
+      if (!content) {
+        return;
+      }
+
+      if (welcome) {
+        welcome.style.display = "none";
+      }
+
+      const row = document.createElement("div");
+
+      row.className =
+        "message-row " +
+        (role === "user" ? "user" : "assistant");
+
+
+      const bubble = document.createElement("div");
+
+      bubble.className =
+        "message " +
+        (role === "user" ? "user" : "assistant") +
+        (isError ? " error" : "");
+
+
+      /*
+       * textContent is intentional.
+       *
+       * It prevents model output from being interpreted
+       * as executable HTML.
+       */
+      bubble.textContent = content;
+
+
+      row.appendChild(bubble);
+      chat.insertBefore(row, typing);
+
+      scrollToBottom();
+    }
+
+
+    function setSending(value) {
+      isSending = value;
+
+      sendButton.disabled = value;
+      input.disabled = value;
+
+      if (value) {
+        sendButton.textContent = "Sending…";
+      } else {
+        sendButton.textContent = "Send";
+        input.disabled = false;
+      }
+    }
+
+
+    /*
+     * Automatically grow the textarea.
+     */
+
+    function resizeInput() {
+      input.style.height = "auto";
+
+      const height = Math.min(
+        input.scrollHeight,
+        150
+      );
+
+      input.style.height = height + "px";
+    }
+
+
+    /*
+     * ============================================================
+     * SEND MESSAGE
+     * ============================================================
+     */
 
     async function sendMessage() {
+
+      if (isSending) {
+        return;
+      }
+
       const message = input.value.trim();
 
-      if (!message) return;
+      if (!message) {
+        return;
+      }
 
-      addMessage(message, "user");
+
+      /*
+       * Show user's message immediately.
+       * This makes the UI feel much faster even while Gemini
+       * is processing.
+       */
+
+      addMessage("user", message);
+
       input.value = "";
-      button.disabled = true;
-      button.textContent = "...";
+      resizeInput();
+
+      setSending(true);
+      showTyping();
+      hideConnectionNotice();
+
+
+      /*
+       * AbortController lets us stop a request only after
+       * 60 seconds.
+       */
+
+      const controller = new AbortController();
+
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+      }, REQUEST_TIMEOUT);
+
 
       try {
-        const response = await fetch("/api/message", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ message })
-        });
 
-        const text = await response.text();
-const data = JSON.parse(text);
+        const response = await fetch(
+          `${API_BASE}/api/message`,
+          {
+            method: "POST",
 
-        if (!response.ok) {
-          throw new Error(data.error || "Gock could not reply.");
+            headers: {
+              "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+              message
+            }),
+
+            signal: controller.signal,
+
+            /*
+             * Don't use browser cache for POST.
+             */
+            cache: "no-store"
+          }
+        );
+
+
+        clearTimeout(timeoutId);
+
+
+        /*
+         * Read JSON safely.
+         */
+
+        let data;
+
+        try {
+          data = await response.json();
+        } catch {
+          throw new Error(
+            `Server returned an invalid response (${response.status}).`
+          );
         }
 
-        addMessage(data.message.content, "gock");
+
+        if (!response.ok) {
+
+          throw new Error(
+            data?.error ||
+            `Gock server error (${response.status}).`
+          );
+        }
+
+
+        const reply =
+          data?.message?.content ||
+          data?.reply ||
+          data?.content;
+
+
+        if (!reply) {
+          throw new Error(
+            "Gock received an empty response from Gemini."
+          );
+        }
+
+
+        hideTyping();
+
+        addMessage(
+          "assistant",
+          reply
+        );
+
+
+        /*
+         * Successful request.
+         */
+        hideConnectionNotice();
+
 
       } catch (error) {
-        addMessage("Gock connection error: " + error.message, "gock");
-      }
 
-      button.disabled = false;
-      button.textContent = "Send";
-      input.focus();
+        clearTimeout(timeoutId);
+        hideTyping();
+
+
+        let errorMessage;
+
+
+        if (error?.name === "AbortError") {
+
+          errorMessage =
+            "Gock is taking longer than expected. " +
+            "Render may be waking up or Gemini may still be processing. " +
+            "Try again in a moment.";
+
+          showConnectionNotice(
+            "Gock is still waking up or Gemini is taking longer than usual."
+          );
+
+        } else if (
+          error instanceof TypeError &&
+          error.message === "Failed to fetch"
+        ) {
+
+          errorMessage =
+            "Gock could not connect to the server.";
+
+          showConnectionNotice(
+            "Connection to the Gock server failed."
+          );
+
+        } else {
+
+          errorMessage =
+            error?.message ||
+            "Something went wrong while talking to Gock.";
+        }
+
+
+        addMessage(
+          "assistant",
+          errorMessage,
+          true
+        );
+
+
+        console.error(
+          "Gock request error:",
+          error
+        );
+
+      } finally {
+
+        setSending(false);
+
+        /*
+         * Restore focus after the response.
+         */
+        input.focus();
+      }
     }
 
-    button.addEventListener("click", sendMessage);
 
-    input.addEventListener("keydown", event => {
-      if (event.key === "Enter") {
-        sendMessage();
+    /*
+     * ============================================================
+     * HEALTH CHECK
+     * ============================================================
+     *
+     * This lightly wakes the Render service when the page opens.
+     *
+     * It does NOT call Gemini.
+     */
+
+    async function checkConnection() {
+
+      try {
+
+        const response = await fetch(
+          `${API_BASE}/health`,
+          {
+            method: "GET",
+            cache: "no-store"
+          }
+        );
+
+
+        if (!response.ok) {
+          throw new Error(
+            `Health check failed: ${response.status}`
+          );
+        }
+
+
+        const data = await response.json();
+
+
+        if (data?.ok) {
+          hideConnectionNotice();
+        }
+
+      } catch (error) {
+
+        console.warn(
+          "Gock health check:",
+          error
+        );
+
+        /*
+         * Don't scare the user immediately.
+         *
+         * The actual message request will show a clear
+         * error if the server really isn't reachable.
+         */
       }
-    });
+    }
+
+
+    /*
+     * ============================================================
+     * ENTER / SHIFT+ENTER
+     * ============================================================
+     *
+     * Enter       = send
+     * Shift+Enter = new line
+     */
+
+    input.addEventListener(
+      "keydown",
+      event => {
+
+        if (
+          event.key === "Enter" &&
+          !event.shiftKey
+        ) {
+
+          event.preventDefault();
+
+          sendMessage();
+        }
+      }
+    );
+
+
+    /*
+     * Resize textarea while typing.
+     */
+
+    input.addEventListener(
+      "input",
+      resizeInput
+    );
+
+
+    /*
+     * Send button.
+     */
+
+    sendButton.addEventListener(
+      "click",
+      sendMessage
+    );
+
+
+    /*
+     * ============================================================
+     * INITIALIZATION
+     * ============================================================
+     */
+
+    resizeInput();
+
+    checkConnection();
 
     input.focus();
+
+
+    /*
+     * Also attempt a health check when the user returns
+     * to the page after leaving it idle.
+     */
+
+    document.addEventListener(
+      "visibilitychange",
+      () => {
+
+        if (!document.hidden) {
+          checkConnection();
+        }
+
+      }
+    );
+
   </script>
 
 </body>
