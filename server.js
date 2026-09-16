@@ -4,17 +4,20 @@ import cors from "cors";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+
+// Gemini model used by Gock
+const GEMINI_MODEL = "gemini-3.8-flash";
 
 app.use(cors());
 app.use(express.json({ limit: "1mb" }));
 
 const defaultContext = {
-  identity: "I’m Gock, an AI assistant.",
+  identity: "I'm Gock, an AI assistant.",
   creator: "The user built the Gock application with ChatGPT.",
   separation: "Gock is a standalone project.",
   personality: [
-    "Be sarcastic, playful, mischievous and blunt, while remaining polite.",
+    "Be sarcastic, playful, mischievous and blunt while remaining polite.",
     "Never pretend to be the real Grok.",
     "Gock and Grok can argue for comedic effect."
   ],
@@ -36,7 +39,8 @@ app.get("/health", (_req, res) => {
   res.json({
     ok: true,
     service: "Gock Connector",
-    aiConfigured: Boolean(OPENROUTER_API_KEY)
+    aiConfigured: Boolean(GEMINI_API_KEY),
+    model: GEMINI_MODEL
   });
 });
 
@@ -78,10 +82,10 @@ app.post("/api/message", async (req, res) => {
     });
   }
 
-  if (!OPENROUTER_API_KEY) {
+  if (!GEMINI_API_KEY) {
     return res.status(500).json({
       ok: false,
-      error: "OPENROUTER_API_KEY is not configured."
+      error: "GEMINI_API_KEY is not configured."
     });
   }
 
@@ -105,43 +109,48 @@ ${context.notes.join("\n")}
 
 Important:
 - You are Gock, not the real Grok.
-- Your underlying AI model may be provided by OpenRouter.
+- You are powered by Google Gemini.
 - Never claim to literally be the real Grok.
-- Keep Gock's identity and personality.
+- Keep Gock's identity and personality consistent.
 - Be sarcastic, playful, mischievous and blunt while remaining polite.
 `;
 
   const conversation = [
-    {
-      role: "system",
-      content: systemPrompt.trim()
-    },
     ...messages
       .filter(
-        item => item.role === "user" || item.role === "assistant"
+        item =>
+          item &&
+          (item.role === "user" || item.role === "assistant") &&
+          typeof item.content === "string"
       )
       .map(item => ({
-        role: item.role,
-        content: item.content
+        role: item.role === "assistant" ? "model" : "user",
+        parts: [{ text: item.content }]
       })),
     {
       role: "user",
-      content: message.trim()
+      parts: [{ text: message.trim() }]
     }
   ];
 
   try {
     const response = await fetch(
-      "https://openrouter.ai/api/v1/chat/completions",
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
       {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+          "x-goog-api-key": GEMINI_API_KEY,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          model: "openrouter/free",
-          messages: conversation
+          systemInstruction: {
+            parts: [
+              {
+                text: systemPrompt.trim()
+              }
+            ]
+          },
+          contents: conversation
         })
       }
     );
@@ -153,12 +162,15 @@ Important:
         ok: false,
         error:
           data?.error?.message ||
-          "OpenRouter request failed."
+          "Gemini request failed."
       });
     }
 
     const reply =
-      data?.choices?.[0]?.message?.content ||
+      data?.candidates?.[0]?.content?.parts
+        ?.map(part => part.text || "")
+        .join("")
+        .trim() ||
       "Gock received no response.";
 
     const userItem = {
@@ -180,11 +192,10 @@ Important:
       ok: true,
       message: assistantItem
     });
-
   } catch (error) {
     res.status(502).json({
       ok: false,
-      error: "Could not reach OpenRouter.",
+      error: "Could not reach Gemini.",
       detail:
         error instanceof Error
           ? error.message
