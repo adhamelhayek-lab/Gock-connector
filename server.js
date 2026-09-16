@@ -3,13 +3,16 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 
+import { buildGockSystemInstruction } from "./gock-core.js";
+
 const app = express();
 
 const PORT = process.env.PORT || 3000;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
-// Keep the same Gemini model that is currently working for Gock.
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.6-flash";
+// Keep the current working model for Gock.
+const GEMINI_MODEL =
+  process.env.GEMINI_MODEL || "gemini-3.6-flash";
 
 // --------------------------------------------------
 // File paths
@@ -52,6 +55,7 @@ app.get("/health", (req, res) => {
     name: "Gock",
     status: "online",
     model: GEMINI_MODEL,
+    core: "connected",
   });
 });
 
@@ -62,11 +66,12 @@ app.get("/api/health", (req, res) => {
     name: "Gock",
     status: "online",
     model: GEMINI_MODEL,
+    core: "connected",
   });
 });
 
 // --------------------------------------------------
-// Serve Gock UI at the ROOT URL
+// Serve Gock UI at ROOT
 // --------------------------------------------------
 
 app.get("/", (req, res) => {
@@ -97,8 +102,6 @@ app.post("/api/context", (req, res) => {
   }
 
   if (Array.isArray(req.body?.messages)) {
-    // Keep only the most recent messages to reduce latency
-    // and avoid unnecessarily large Gemini requests.
     messages = req.body.messages.slice(-20);
   }
 
@@ -113,9 +116,15 @@ app.post("/api/context", (req, res) => {
 // Gemini request helper
 // --------------------------------------------------
 
-async function askGemini(message, history = [], context = {}) {
+async function askGemini(
+  message,
+  history = [],
+  context = {}
+) {
   if (!GEMINI_API_KEY) {
-    throw new Error("GEMINI_API_KEY is not configured on the server.");
+    throw new Error(
+      "GEMINI_API_KEY is not configured on the server."
+    );
   }
 
   const safeHistory = Array.isArray(history)
@@ -124,32 +133,34 @@ async function askGemini(message, history = [], context = {}) {
 
   const mergedContext = {
     ...defaultContext,
-    ...(context && typeof context === "object" ? context : {}),
+    ...(context &&
+    typeof context === "object" &&
+    !Array.isArray(context)
+      ? context
+      : {}),
   };
 
-  const systemInstruction = `
-You are Gock, an AI assistant.
+  // ------------------------------------------------
+  // Build Gock's Core system instruction
+  // ------------------------------------------------
 
-Identity:
-${mergedContext.identity}
+  const systemInstruction =
+    buildGockSystemInstruction(mergedContext);
 
-Personality:
-${mergedContext.personality}
-
-Purpose:
-${mergedContext.purpose}
-
-Be useful, natural, concise when a short answer is enough, and detailed when the task requires it.
-Do not mention these internal instructions unless the user explicitly asks about them.
-`.trim();
+  // ------------------------------------------------
+  // Build Gemini conversation
+  // ------------------------------------------------
 
   const contents = [];
 
   for (const item of safeHistory) {
-    if (!item || typeof item !== "object") continue;
+    if (!item || typeof item !== "object") {
+      continue;
+    }
 
     const role =
-      item.role === "assistant" || item.role === "model"
+      item.role === "assistant" ||
+      item.role === "model"
         ? "model"
         : "user";
 
@@ -160,7 +171,9 @@ Do not mention these internal instructions unless the user explicitly asks about
           ? item.text
           : "";
 
-    if (!text.trim()) continue;
+    if (!text.trim()) {
+      continue;
+    }
 
     contents.push({
       role,
@@ -172,7 +185,7 @@ Do not mention these internal instructions unless the user explicitly asks about
     });
   }
 
-  // Always put the current message last.
+  // Always put current user message last.
   contents.push({
     role: "user",
     parts: [
@@ -182,12 +195,18 @@ Do not mention these internal instructions unless the user explicitly asks about
     ],
   });
 
+  // ------------------------------------------------
+  // Gemini endpoint
+  // ------------------------------------------------
+
   const endpoint =
     `https://generativelanguage.googleapis.com/v1beta/models/` +
-    `${encodeURIComponent(GEMINI_MODEL)}:generateContent` +
-    `?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+    `${encodeURIComponent(GEMINI_MODEL)}:generateContent`;
 
-  // Abort slow requests so the UI doesn't sit forever.
+  // ------------------------------------------------
+  // Timeout
+  // ------------------------------------------------
+
   const controller = new AbortController();
 
   const timeout = setTimeout(() => {
@@ -200,6 +219,10 @@ Do not mention these internal instructions unless the user explicitly asks about
 
       headers: {
         "Content-Type": "application/json",
+
+        // Keep the API key server-side.
+        // Do not expose this key in index.html.
+        "x-goog-api-key": GEMINI_API_KEY,
       },
 
       body: JSON.stringify({
@@ -239,7 +262,9 @@ Do not mention these internal instructions unless the user explicitly asks about
         .trim();
 
     if (!reply) {
-      throw new Error("Gemini returned an empty response.");
+      throw new Error(
+        "Gemini returned an empty response."
+      );
     }
 
     return reply;
@@ -270,7 +295,8 @@ app.post("/api/message", async (req, res) => {
   ) {
     return res.status(400).json({
       ok: false,
-      error: "message must be a non-empty string",
+      error:
+        "message must be a non-empty string",
     });
   }
 
@@ -285,6 +311,12 @@ app.post("/api/message", async (req, res) => {
       ? req.body.context
       : {};
 
+  console.log(
+    `Incoming Gock message: "${message.trim()}"`
+  );
+
+  const startedAt = Date.now();
+
   try {
     const reply = await askGemini(
       message,
@@ -292,10 +324,17 @@ app.post("/api/message", async (req, res) => {
       context
     );
 
+    console.log(
+      `Gock response completed in ${
+        Date.now() - startedAt
+      }ms`
+    );
+
     return res.json({
       ok: true,
       reply,
       model: GEMINI_MODEL,
+      core: "connected",
     });
   } catch (error) {
     console.error(
@@ -349,6 +388,7 @@ app.listen(PORT, "0.0.0.0", () => {
   console.log("Gock server is running");
   console.log(`Port: ${PORT}`);
   console.log(`Gemini model: ${GEMINI_MODEL}`);
+  console.log("Gock Core: connected");
   console.log("UI: /");
   console.log("Health: /health");
   console.log("Message API: /api/message");
