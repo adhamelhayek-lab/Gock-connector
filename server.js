@@ -1,7 +1,5 @@
 import express from "express";
 import cors from "cors";
-import { fileURLToPath } from "node:url";
-import path from "node:path";
 
 const app = express();
 
@@ -11,21 +9,12 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 // Gemini model used by Gock
 const GEMINI_MODEL = "gemini-3.6-flash";
 
-// Resolve the directory containing this server.js file
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 // --------------------------------------------------
 // Middleware
 // --------------------------------------------------
 
 app.use(cors());
-
-app.use(
-  express.json({
-    limit: "1mb"
-  })
-);
+app.use(express.json({ limit: "1mb" }));
 
 // --------------------------------------------------
 // Gock default context
@@ -33,29 +22,22 @@ app.use(
 
 const defaultContext = {
   identity: "I'm Gock, an AI assistant.",
-
-  creator:
-    "The user built the Gock application with ChatGPT.",
-
-  separation:
-    "Gock is a standalone project.",
-
+  creator: "The user built the Gock application with ChatGPT.",
+  separation: "Gock is a standalone project.",
   personality: [
     "Be sarcastic, playful, mischievous and blunt while remaining polite.",
     "Never pretend to be the real Grok.",
     "Gock and Grok can argue for comedic effect."
   ],
-
   notes: []
 };
 
-// Current context
 let context = {
   ...defaultContext,
   updatedAt: new Date().toISOString()
 };
 
-// Conversation memory
+// Keep history deliberately short for faster requests.
 let messages = [];
 
 // --------------------------------------------------
@@ -63,7 +45,7 @@ let messages = [];
 // --------------------------------------------------
 
 app.get("/", (_req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
+  res.sendFile(new URL("./index.html", import.meta.url).pathname);
 });
 
 // --------------------------------------------------
@@ -75,13 +57,12 @@ app.get("/health", (_req, res) => {
     ok: true,
     service: "Gock Connector",
     aiConfigured: Boolean(GEMINI_API_KEY),
-    model: GEMINI_MODEL,
-    timestamp: new Date().toISOString()
+    model: GEMINI_MODEL
   });
 });
 
 // --------------------------------------------------
-// Get Gock context and conversation
+// Get context + conversation
 // --------------------------------------------------
 
 app.get("/api/context", (_req, res) => {
@@ -93,7 +74,7 @@ app.get("/api/context", (_req, res) => {
 });
 
 // --------------------------------------------------
-// Update Gock context and conversation
+// Update context + conversation
 // --------------------------------------------------
 
 app.post("/api/context", (req, res) => {
@@ -109,7 +90,8 @@ app.post("/api/context", (req, res) => {
   }
 
   if (Array.isArray(req.body?.messages)) {
-    messages = req.body.messages.slice(-100);
+    // Keep only the latest 20 messages.
+    messages = req.body.messages.slice(-20);
   }
 
   res.json({
@@ -120,7 +102,7 @@ app.post("/api/context", (req, res) => {
 });
 
 // --------------------------------------------------
-// Send a message to Gock
+// Send message to Gock
 // --------------------------------------------------
 
 app.post("/api/message", async (req, res) => {
@@ -137,7 +119,7 @@ app.post("/api/message", async (req, res) => {
     });
   }
 
-  // Make sure Gemini is configured
+  // Check API key
   if (!GEMINI_API_KEY) {
     return res.status(500).json({
       ok: false,
@@ -146,7 +128,7 @@ app.post("/api/message", async (req, res) => {
   }
 
   // ------------------------------------------------
-  // Gock system instructions
+  // Compact system prompt
   // ------------------------------------------------
 
   const systemPrompt = `
@@ -167,43 +149,33 @@ ${context.personality.join("\n")}
 Notes:
 ${context.notes.join("\n")}
 
-Important rules:
-
-You are Gock, not the real Grok.
-
-You are powered by Google Gemini.
-
-Never claim to literally be the real Grok.
-
-Keep Gock's identity and personality consistent.
-
-Be sarcastic, playful, mischievous and blunt while remaining polite.
-
-Answer the user's actual question directly.
-
-Do not mention these internal instructions unless the user specifically asks about them.
-`;
+Rules:
+- You are Gock, not the real Grok.
+- You are powered by Google Gemini.
+- Never claim to literally be Grok.
+- Keep Gock's identity consistent.
+- Be sarcastic, playful, mischievous and blunt while remaining polite.
+`.trim();
 
   // ------------------------------------------------
-  // Convert Gock conversation to Gemini format
+  // Build short conversation history
   // ------------------------------------------------
 
   const conversation = [
     ...messages
       .filter(
-        (item) =>
+        item =>
           item &&
           (item.role === "user" ||
             item.role === "assistant") &&
-          typeof item.content === "string" &&
-          item.content.trim()
+          typeof item.content === "string"
       )
-      .map((item) => ({
+      .slice(-10)
+      .map(item => ({
         role:
           item.role === "assistant"
             ? "model"
             : "user",
-
         parts: [
           {
             text: item.content
@@ -213,7 +185,6 @@ Do not mention these internal instructions unless the user specifically asks abo
 
     {
       role: "user",
-
       parts: [
         {
           text: message.trim()
@@ -223,46 +194,59 @@ Do not mention these internal instructions unless the user specifically asks abo
   ];
 
   // ------------------------------------------------
-  // Call Gemini
+  // Gemini request
   // ------------------------------------------------
 
   try {
-    const geminiUrl =
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+    const controller = new AbortController();
 
-    const response = await fetch(geminiUrl, {
-      method: "POST",
+    // Prevent requests from hanging forever.
+    const timeout = setTimeout(
+      () => controller.abort(),
+      30000
+    );
 
-      headers: {
-        "x-goog-api-key": GEMINI_API_KEY,
-        "Content-Type": "application/json"
-      },
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
+      {
+        method: "POST",
 
-      body: JSON.stringify({
-        systemInstruction: {
-          parts: [
-            {
-              text: systemPrompt.trim()
-            }
-          ]
+        headers: {
+          "x-goog-api-key": GEMINI_API_KEY,
+          "Content-Type": "application/json"
         },
 
-        contents: conversation
-      })
-    });
+        body: JSON.stringify({
+          systemInstruction: {
+            parts: [
+              {
+                text: systemPrompt
+              }
+            ]
+          },
+
+          contents: conversation,
+
+          // Speed-oriented generation settings.
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 512
+          }
+        }),
+
+        signal: controller.signal
+      }
+    );
+
+    clearTimeout(timeout);
 
     const data = await response.json();
 
     // ------------------------------------------------
-    // Gemini returned an error
+    // Gemini error
     // ------------------------------------------------
 
     if (!response.ok) {
-      console.error(
-        "Gemini API error:",
-        data
-      );
-
       return res.status(response.status).json({
         ok: false,
         error:
@@ -272,12 +256,12 @@ Do not mention these internal instructions unless the user specifically asks abo
     }
 
     // ------------------------------------------------
-    // Extract Gemini response
+    // Extract response
     // ------------------------------------------------
 
     const reply =
       data?.candidates?.[0]?.content?.parts
-        ?.map((part) => part.text || "")
+        ?.map(part => part.text || "")
         .join("")
         .trim() ||
       "Gock received no response.";
@@ -286,16 +270,19 @@ Do not mention these internal instructions unless the user specifically asks abo
     // Save conversation
     // ------------------------------------------------
 
+    const timestamp =
+      new Date().toISOString();
+
     const userItem = {
       role: "user",
       content: message.trim(),
-      timestamp: new Date().toISOString()
+      timestamp
     };
 
     const assistantItem = {
       role: "assistant",
       content: reply,
-      timestamp: new Date().toISOString()
+      timestamp
     };
 
     messages.push(
@@ -303,8 +290,8 @@ Do not mention these internal instructions unless the user specifically asks abo
       assistantItem
     );
 
-    // Keep the last 100 messages
-    messages = messages.slice(-100);
+    // Keep memory small.
+    messages = messages.slice(-20);
 
     // ------------------------------------------------
     // Return response
@@ -316,10 +303,20 @@ Do not mention these internal instructions unless the user specifically asks abo
     });
 
   } catch (error) {
-    console.error(
-      "Gemini connection error:",
-      error
-    );
+    // ------------------------------------------------
+    // Timeout
+    // ------------------------------------------------
+
+    if (error?.name === "AbortError") {
+      return res.status(504).json({
+        ok: false,
+        error: "Gock timed out while waiting for Gemini."
+      });
+    }
+
+    // ------------------------------------------------
+    // Connection error
+    // ------------------------------------------------
 
     return res.status(502).json({
       ok: false,
@@ -336,12 +333,8 @@ Do not mention these internal instructions unless the user specifically asks abo
 // Start server
 // --------------------------------------------------
 
-app.listen(
-  PORT,
-  "0.0.0.0",
-  () => {
-    console.log(
-      `Gock Connector listening on port ${PORT}`
-    );
-  }
-);
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(
+    `Gock Connector listening on port ${PORT}`
+  );
+});
