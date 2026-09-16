@@ -7,7 +7,7 @@ const PORT = process.env.PORT || 3000;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 // Gemini model used by Gock
-const GEMINI_MODEL = "gemini-3.8-flash";
+const GEMINI_MODEL = "gemini-3.6-flash";
 
 app.use(cors());
 app.use(express.json({ limit: "1mb" }));
