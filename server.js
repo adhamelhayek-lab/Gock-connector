@@ -116,7 +116,7 @@ Important:
 `;
 
   const conversation = [
-    ...messages
+    ...messages.slice(-20)
       .filter(
         item =>
           item &&
